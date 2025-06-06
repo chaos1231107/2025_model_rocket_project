@@ -1,3 +1,3 @@
 ## Reinforcing stability of data
-### Moving Average Filter 
-#### Xk(output) = Xk-1 + (Xk - Xk-window) / window
+### Moving Average Filter : Using Slicing window Algorithm
+#### X[k] = X[k-1] + (X[k] - X[k-window]) / window
