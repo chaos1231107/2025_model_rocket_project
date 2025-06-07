@@ -29,7 +29,7 @@ def low_pass_filter(data_list, beta, sma_list, ema_list):
             low_pass_list.append((1-beta) * sma_list[i] + beta * ema_list[i]) #LPF = (1-beta) * SMA + beta * EMA
     return low_pass_list
 
-alpha = 0.2 #weight of previous data : give more weight to previous data
+alpha = 0.2 #weight of previous data : give less weight to previous data
 beta = 0.125
 window_size = 3
 data = np.random.randint(0, 100, size=100)
