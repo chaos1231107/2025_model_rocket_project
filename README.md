@@ -7,4 +7,4 @@
 - SMA + EMA belnding flilger = Primary Low Pass Filter(LPF) : Eliminate high frequency sensor value : Only low frequency data can be passed
 
 ## Secondary data Processing : Gain prediction by using Multivariate Kalman Filter(MKF) and correcting values by using PID control
-- error = desired_value - kalman_predict
+- error = desired_value(state) - kalman_predict
