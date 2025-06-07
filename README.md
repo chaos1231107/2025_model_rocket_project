@@ -12,10 +12,5 @@
 
 https://github.com/user-attachments/assets/b63e22f9-f6f8-4f59-95cd-49eea4a7a57c
 
-<video width="320" controls>
-  <source src="https://github.com/user-attachments/assets/b63e22f9-f6f8-4f59-95cd-49eea4a7a57c" type="video/mp4">
-</video>
-
-
 ## Secondary data Processing : Gain prediction by using Multivariate Kalman Filter(MKF) and correcting values by using PID control
 - error = desired_value(state) - kalman_predict
