@@ -8,7 +8,7 @@ def sma_filter(data_list, window_size):
             sma_list.append(sum(data_list[0:i+1]) / (i+1))
         else:
             # SMA[k] = SMA[k-1] + (X_data[k] - X_data[k-window_size]) / window_size
-            sma_list.append(sma_list[-1] + (data_list[i] - data_list[i-window_size]) / window_size)
+            sma_list.append(sma_list[i-1] + (data_list[i] - data_list[i-window_size]) / window_size)
     return sma_list
 
 def ema_filter(sma_list, alpha, data_list):
