@@ -1,7 +1,7 @@
 # 2025_model_rocket_project
 # Developing Cascade Filter System to optimize the software of Rocket.
 
-## SMA(Simple Moving Average) vs EMA(exponential moving average)
+## SMA(Simple Moving Average) vs EMA(Exponential Moving Average)
 - sma[k] = X[k] + (X[k] - X[k-window]) / window_size --> Using "slicing window" algorithm
 - ema[k] = (1-alpha) * sma[k-1] + alpha * data[k]
 
