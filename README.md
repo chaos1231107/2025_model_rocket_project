@@ -9,6 +9,9 @@
 - (1-beta) * SMA_value + beta * EMA_value --> SMA + EMA belnding flilger = Low Pass Filter(LPF) : Eliminate high frequency sensor value : Only low frequency data can be passed
 
 <img src="https://github.com/user-attachments/assets/0d932935-2bb8-4f4c-85a5-5843554de293" width="400"/>
+<video width="640" height="360" controls>
+  <source src="media/Figure%201%202025-06-08%2000-24-06.mp4" type="video/mp4">
+</video>
 
 ## Secondary data Processing : Gain prediction by using Multivariate Kalman Filter(MKF) and correcting values by using PID control
 - error = desired_value(state) - kalman_predict
