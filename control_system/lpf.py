@@ -17,7 +17,7 @@ def ema_filter(sma_list, alpha, data_list):
         if i == 0:
             ema_list.append(sma_list[0])
         else:
-            ema_list.append(alpha * sma_list[-1] + (1 - alpha) * data_list[i]) #EMA = alpha * SMA[i-1] + (1-alpha) * X_data[i]
+            ema_list.append(alpha * sma_list[i-1] + (1 - alpha) * data_list[i]) #EMA = alpha * SMA[i-1] + (1-alpha) * X_data[i]
     return ema_list
 
 def low_pass_filter(data_list, beta, sma_list, ema_list):
@@ -40,8 +40,8 @@ ema_avg = ema_filter(moving_avg, alpha, data)
 lpf = low_pass_filter(data, beta, moving_avg, ema_avg)
 
 plt.plot(t, data, label='Raw Data')
-plt.plot(t, moving_avg, label='SMA')
-plt.plot(t, ema_avg, label='EMA')
+#plt.plot(t, moving_avg, label='SMA')
+#plt.plot(t, ema_avg, label='EMA')
 plt.plot(t, lpf, label='LPF')
 plt.legend()
 plt.show()
