@@ -1,13 +1,16 @@
 #include <Wire.h>
 #include <MPU6050.h>
 #include <math.h>
+#define ALPHA 0.873
 
 MPU6050 mpu;
 
-#define TRIGGER_THRESHOLD 45.0
+#define TRIGGER_THRESHOLD 20.0
 #define PI 3.14159265358979323846
-
+//이그나이터 릴레이 핀 연결
 int ignitor_relay_pin = 6;
+
+int falling_count = 0;
 bool ejectionStarted = false;
 unsigned long ejectionStartTime = 0;
 
@@ -34,7 +37,10 @@ float prev_KalX = 0.0;
 float prev_KalY = 0.0;
 
 bool firstRun = true;
-
+// lpf 변수
+float lpf_angularVelocity_X = 0.0;
+float lpf_angularVelocity_Y = 0.0;
+// 칼만필터 함수
 float kalmanFilter(float newAngle, float newRate, float dt, float &angle, float &bias, float P[2][2]) {
     newRate -= bias;
     angle += newRate * dt;
@@ -63,7 +69,7 @@ float kalmanFilter(float newAngle, float newRate, float dt, float &angle, float 
 
     return angle;
 }
-
+//낙하산 사출 함수
 void Parachute_ejection() {
     if (!ejectionStarted) {
         ejectionStarted = true;
@@ -84,9 +90,11 @@ void setup() {
         Serial.println("MPU Connection Failed!");
         while(1);
     }
+    
+    Serial.println("I2C Connection Succeded!");
 
-    long sumX = 0, sumY = 0, sumZ = 0;
     delay(2000);
+    long sumX = 0, sumY = 0, sumZ = 0;
     for (int i = 0; i < 100; i++) {
         mpu.getRotation(&gx, &gy, &gz);
         sumX += gx;
@@ -123,12 +131,14 @@ void setup() {
     P_Y[1][0] = 0; P_Y[1][1] = 1;
 }
 
+//bool headerPrinted = false;
+
 void loop() {
     unsigned long currentTime = millis();
 
     // 2초간 센서 안정화
     if (isStabilizing) {
-        if (currentTime - stabilizeStartTime >= 2000) {
+        if (currentTime - stabilizeStartTime >= 3000) {
             isStabilizing = false;
             lastTime = currentTime;
             prev_KalX = 0.0;
@@ -136,7 +146,7 @@ void loop() {
         } else {
             // 안정화 중에는 이그나이터 OFF
             digitalWrite(ignitor_relay_pin, LOW);
-            Serial.println("Sensor Stabilizing 2s...");
+            Serial.println("Sensor Stabilizing 3s...");
             // 50Hz 주기 유지
             while (millis() - currentTime < 20);
             return;
@@ -162,12 +172,12 @@ void loop() {
     // 좌표계 변환 : 구형 좌표계로 변환(각도와 각속도의 값을 얻기 위해)
     // Roll 값 : y, z평면에서 x축 기울기(x축 회전) roll = arctan(Ay/Ax)
     float accel_angleX = atan2(ay_g, az_g) * 180.0 / PI;
-    //pitch 값 : y, z축의 가속도의 합성 -> y벡터와 z벡터의 내적
+    //pitch 값 : x, z축의 가속도의 합성 -> x벡터와 z벡터의 내적
     float denom = sqrt(ay_g * ay_g + az_g * az_g);
     // 너무 값이 작아지는 것 및 오버플로우로 인한 메모리 누수 방지
     if (denom < 1e-6) denom = 1e-6;
     float accel_angleY = atan2(-ax_g, denom) * 180.0 / PI;
-
+    // 첫 칼만값은 raw data값으로
     if (firstRun) {
         KalAngleX = accel_angleX;
         KalAngleY = accel_angleY;
@@ -179,24 +189,31 @@ void loop() {
 
     float angularVelocity_X = (KalX - prev_KalX) / dt;
     float angularVelocity_Y = (KalY - prev_KalY) / dt;
+    // lpf = alpha * lpf + (1-alpha) * data
+    lpf_angularVelocity_X = ALPHA * lpf_angularVelocity_X + (1 - ALPHA) * angularVelocity_X;
+    lpf_angularVelocity_Y = ALPHA * lpf_angularVelocity_Y + (1 - ALPHA) * angularVelocity_Y;
 
-    bool trigger_X = fabs(KalX) > TRIGGER_THRESHOLD && fabs(angularVelocity_X) > TRIGGER_THRESHOLD;
-    bool trigger_Y = fabs(KalY) > TRIGGER_THRESHOLD && fabs(angularVelocity_Y) > TRIGGER_THRESHOLD;
+    bool trigger_X = fabs(KalX) > TRIGGER_THRESHOLD && fabs(lpf_angularVelocity_X) > TRIGGER_THRESHOLD;
+    bool trigger_Y = fabs(KalY) > TRIGGER_THRESHOLD && fabs(lpf_angularVelocity_Y) > TRIGGER_THRESHOLD;
 
-    if (trigger_X || trigger_Y) {
-        //Serial.println("Deployed!");
+    if ((trigger_X || trigger_Y)) {
+        Serial.println("Deployed!");
         Parachute_ejection();
     }
 
     prev_KalX = KalX;
     prev_KalY = KalY;
+    
 
     // 시리얼 플로터 전용 출력 (4개 값: 원시X, 칼만X, 원시Y, 칼만Y)
     Serial.print(accel_angleX); Serial.print(",");
     Serial.print(KalX); Serial.print(",");
     Serial.print(accel_angleY); Serial.print(",");
-    Serial.println(KalY);
-
+    Serial.print(KalY); Serial.print(",");
+    Serial.print(angularVelocity_X); Serial.print(",");
+    Serial.print(angularVelocity_Y); Serial.print(",");
+    Serial.print(lpf_angularVelocity_X); Serial.print(",");
+    Serial.println(lpf_angularVelocity_Y); //Serial.print(",");
     // 50Hz 주기 유지 (20ms)
     while (millis() - currentTime < 20);
 }
