@@ -162,7 +162,7 @@ void loop() {
     // 좌표계 변환 : 구형 좌표계로 변환(각도와 각속도의 값을 얻기 위해)
     // Roll 값 : y, z평면에서 x축 기울기(x축 회전) roll = arctan(Ay/Ax)
     float accel_angleX = atan2(ay_g, az_g) * 180.0 / PI;
-    //pitch 값 : x, z축의 가속도의 합성 -> x벡터와 z벡터의 내적
+    //pitch 값 : y, z축의 가속도의 합성 -> y벡터와 z벡터의 내적
     float denom = sqrt(ay_g * ay_g + az_g * az_g);
     // 너무 값이 작아지는 것 및 오버플로우로 인한 메모리 누수 방지
     if (denom < 1e-6) denom = 1e-6;
