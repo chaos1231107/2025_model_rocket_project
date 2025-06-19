@@ -160,8 +160,11 @@ void loop() {
     float az_g = az / 16384.0;
 
     // 좌표계 변환 : 구형 좌표계로 변환(각도와 각속도의 값을 얻기 위해)
+    // Roll 값 : y, z평면에서 x축 기울기(x축 회전) roll = arctan(Ay/Ax)
     float accel_angleX = atan2(ay_g, az_g) * 180.0 / PI;
+    //pitch 값 : x, z축의 가속도의 합성 -> x벡터와 z벡터의 내적
     float denom = sqrt(ay_g * ay_g + az_g * az_g);
+    // 너무 값이 작아지는 것 및 오버플로우로 인한 메모리 누수 방지
     if (denom < 1e-6) denom = 1e-6;
     float accel_angleY = atan2(-ax_g, denom) * 180.0 / PI;
 
@@ -170,13 +173,13 @@ void loop() {
         KalAngleY = accel_angleY;
         firstRun = false;
     }
-    //칼만 예측
+
     float KalX = kalmanFilter(accel_angleX, gx_dps, dt, KalAngleX, KalBiasX, P_X);
     float KalY = kalmanFilter(accel_angleY, gy_dps, dt, KalAngleY, KalBiasY, P_Y);
-    // 각속도 미분 -> 각가속도
+
     float angularVelocity_X = (KalX - prev_KalX) / dt;
     float angularVelocity_Y = (KalY - prev_KalY) / dt;
-    // x, y사출 조건 z축은 주로 회전만 하므로 x,y를 고려
+
     bool trigger_X = fabs(KalX) > TRIGGER_THRESHOLD && fabs(angularVelocity_X) > TRIGGER_THRESHOLD;
     bool trigger_Y = fabs(KalY) > TRIGGER_THRESHOLD && fabs(angularVelocity_Y) > TRIGGER_THRESHOLD;
 
