@@ -7,40 +7,45 @@ MPU6050 mpu;
 
 #define TRIGGER_THRESHOLD 20.0
 #define PI 3.14159265358979323846
-//이그나이터 릴레이 핀 연결
+
 int ignitor_relay_pin = 6;
 
-int falling_count = 0;
+//int falling_count = 0;
 bool ejectionStarted = false;
 unsigned long ejectionStartTime = 0;
 
-// 센서 안정화
 bool isStabilizing = true;
 unsigned long stabilizeStartTime = 0;
 
 int16_t ax, ay, az, gx, gy, gz;
 int gx_offset = 0, gy_offset = 0, gz_offset = 0;
+float Yaw_prev = 0.0f;
 
 unsigned long startTime = 0;
 unsigned long lastTime = 0;
 
 float KalAngleX = 0.0, KalBiasX = 0.0;
 float KalAngleY = 0.0, KalBiasY = 0.0;
+float KalAngleZ = 0.0, KalBiasZ = 0.0;
+
 float P_X[2][2] = {{1,0}, {0,1}};
 float P_Y[2][2] = {{1,0}, {0,1}};
+float P_Z[2][2] = {{1,0}, {0,1}};
 
-float Q_angle = 0.001;
-float Q_bias = 0.003;
-float R_measure = 0.03;
+float Q_angle = 0.001f;
+float Q_bias = 0.003f;
+float R_measure = 0.03f;
 
-float prev_KalX = 0.0;
-float prev_KalY = 0.0;
+float prev_Kal_Roll = 0.0f;
+float prev_Kal_Pitch = 0.0f;
+float prev_Kal_Yaw = 0.0f;
 
 bool firstRun = true;
-// lpf 변수
-float lpf_angularVelocity_X = 0.0;
-float lpf_angularVelocity_Y = 0.0;
-// 칼만필터 함수
+
+float lpf_angularVelocity_Roll = 0.0f;
+float lpf_angularVelocity_Pitch = 0.0f;
+float lpf_angularVelocity_Yaw = 0.0f;
+
 float kalmanFilter(float newAngle, float newRate, float dt, float &angle, float &bias, float P[2][2]) {
     newRate -= bias;
     angle += newRate * dt;
@@ -69,14 +74,14 @@ float kalmanFilter(float newAngle, float newRate, float dt, float &angle, float 
 
     return angle;
 }
-//낙하산 사출 함수
+
 void Parachute_ejection() {
     if (!ejectionStarted) {
         ejectionStarted = true;
         ejectionStartTime = millis();
         digitalWrite(ignitor_relay_pin, HIGH);
     }
-    if (ejectionStarted && millis() - ejectionStartTime >= 2000) {
+    if (ejectionStarted && millis() - ejectionStartTime >= 2000.0f) {
         digitalWrite(ignitor_relay_pin, LOW);
     }
 }
@@ -103,57 +108,48 @@ void setup() {
         delay(5);
     }
 
-    gx_offset = sumX / 100;
-    gy_offset = sumY / 100;
-    gz_offset = sumZ / 100;
+    gx_offset = sumX / 100.0f;
+    gy_offset = sumY / 100.0f;
+    gz_offset = sumZ / 100.0f;
 
     pinMode(ignitor_relay_pin, OUTPUT);
-    digitalWrite(ignitor_relay_pin, LOW);   // 릴레이 OFF
+    digitalWrite(ignitor_relay_pin, LOW);
 
     startTime = millis();
     lastTime = millis();
 
-    // 안정화 시간 기록
     stabilizeStartTime = millis();
     isStabilizing = true;
 
-    // 칼만 초기화
-    KalAngleX = 0.0;
-    KalAngleY = 0.0;
-    KalBiasX = 0.0;
-    KalBiasY = 0.0;
+    KalAngleX = 0.0f;
+    KalAngleY = 0.0f;
+    KalAngleZ = 0.0f;
+    KalBiasX = 0.0f;
+    KalBiasY = 0.0f;
+    KalBiasZ = 0.0f;
+
     firstRun = true;
-
-    // P 행렬 초기화
-    P_X[0][0] = 1; P_X[0][1] = 0;
-    P_X[1][0] = 0; P_X[1][1] = 1;
-    P_Y[0][0] = 1; P_Y[0][1] = 0;
-    P_Y[1][0] = 0; P_Y[1][1] = 1;
 }
-
-//bool headerPrinted = false;
 
 void loop() {
     unsigned long currentTime = millis();
 
-    // 2초간 센서 안정화
     if (isStabilizing) {
-        if (currentTime - stabilizeStartTime >= 3000) {
+        if (currentTime - stabilizeStartTime >= 3000.0f) {
             isStabilizing = false;
             lastTime = currentTime;
-            prev_KalX = 0.0;
-            prev_KalY = 0.0;
+            prev_Kal_Roll = 0.0f;
+            prev_Kal_Pitch = 0.0f;
+            prev_Kal_Yaw = 0.0f;
         } else {
-            // 안정화 중에는 이그나이터 OFF
             digitalWrite(ignitor_relay_pin, LOW);
             Serial.println("Sensor Stabilizing 3s...");
-            // 50Hz 주기 유지
             while (millis() - currentTime < 20);
             return;
         }
     }
 
-    float dt = (currentTime - lastTime) / 1000.0;
+    float dt = (currentTime - lastTime) / 1000.0f;
     if (dt <= 0) dt = 0.001;
     lastTime = currentTime;
 
@@ -161,59 +157,68 @@ void loop() {
 
     int gx_corr = gx - gx_offset;
     int gy_corr = gy - gy_offset;
+    int gz_corr = gz - gz_offset;
 
-    float gx_dps = gx_corr / 131.0;
-    float gy_dps = gy_corr / 131.0;
+    float gx_dps = gx_corr / 131.0f;
+    float gy_dps = gy_corr / 131.0f;
+    float gz_dps = gz_corr / 131.0f;
 
-    float ax_g = ax / 16384.0;
-    float ay_g = ay / 16384.0;
-    float az_g = az / 16384.0;
+    float ax_g = ax / 16384.0f;
+    float ay_g = ay / 16384.0f;
+    float az_g = az / 16384.0f;
 
-    // 좌표계 변환 : 구형 좌표계로 변환(각도와 각속도의 값을 얻기 위해)
-    // Roll 값 : y, z평면에서 x축 기울기(x축 회전) roll = arctan(Ay/Ax)
-    float accel_angleX = atan2(ay_g, az_g) * 180.0 / PI;
-    //pitch 값 : x, z축의 가속도의 합성 -> x벡터와 z벡터의 내적
+    float Roll = atan2(ay_g, az_g) * 180.0f / PI;
     float denom = sqrt(ay_g * ay_g + az_g * az_g);
-    // 너무 값이 작아지는 것 및 오버플로우로 인한 메모리 누수 방지
     if (denom < 1e-6) denom = 1e-6;
-    float accel_angleY = atan2(-ax_g, denom) * 180.0 / PI;
-    // 첫 칼만값은 raw data값으로
+    float Pitch = atan2(-ax_g, denom) * 180.0f / PI;
+
+    // Yaw : 자이로 적분 방식 사용
+    float Yaw = Yaw_prev + gz_dps * dt;
+    Yaw_prev = Yaw;
+
+    if (Yaw < 0) Yaw += 360.0f;
+    if (Yaw >= 360.0f) Yaw -= 360.0f;
+
     if (firstRun) {
-        KalAngleX = accel_angleX;
-        KalAngleY = accel_angleY;
+        KalAngleX = Roll;
+        KalAngleY = Pitch;
+        KalAngleZ = Yaw;
         firstRun = false;
     }
 
-    float KalX = kalmanFilter(accel_angleX, gx_dps, dt, KalAngleX, KalBiasX, P_X);
-    float KalY = kalmanFilter(accel_angleY, gy_dps, dt, KalAngleY, KalBiasY, P_Y);
+    float Kal_Roll = kalmanFilter(Roll, gx_dps, dt, KalAngleX, KalBiasX, P_X);
+    float Kal_Pitch = kalmanFilter(Pitch, gy_dps, dt, KalAngleY, KalBiasY, P_Y);
+    float Kal_Yaw = kalmanFilter(Yaw, gz_dps, dt, KalAngleZ, KalBiasZ, P_Z);
 
-    float angularVelocity_X = (KalX - prev_KalX) / dt;
-    float angularVelocity_Y = (KalY - prev_KalY) / dt;
-    // lpf = alpha * lpf + (1-alpha) * data
-    lpf_angularVelocity_X = ALPHA * lpf_angularVelocity_X + (1 - ALPHA) * angularVelocity_X;
-    lpf_angularVelocity_Y = ALPHA * lpf_angularVelocity_Y + (1 - ALPHA) * angularVelocity_Y;
+    float angularVelocity_Roll = (Kal_Roll - prev_Kal_Roll) / dt;
+    float angularVelocity_Pitch = (Kal_Pitch - prev_Kal_Pitch) / dt;
+    float angularVelocity_Yaw = (Kal_Yaw - prev_Kal_Yaw) / dt;
 
-    bool trigger_X = fabs(KalX) > TRIGGER_THRESHOLD && fabs(lpf_angularVelocity_X) > TRIGGER_THRESHOLD;
-    bool trigger_Y = fabs(KalY) > TRIGGER_THRESHOLD && fabs(lpf_angularVelocity_Y) > TRIGGER_THRESHOLD;
+    lpf_angularVelocity_Roll = ALPHA * lpf_angularVelocity_Roll + (1 - ALPHA) * angularVelocity_Roll;
+    lpf_angularVelocity_Pitch = ALPHA * lpf_angularVelocity_Pitch + (1 - ALPHA) * angularVelocity_Pitch;
+    lpf_angularVelocity_Yaw = ALPHA * lpf_angularVelocity_Yaw + (1 - ALPHA) * angularVelocity_Yaw;
 
-    if ((trigger_X || trigger_Y)) {
+    bool trigger_X = fabs(Kal_Roll) > TRIGGER_THRESHOLD && fabs(lpf_angularVelocity_Roll) > TRIGGER_THRESHOLD;
+    bool trigger_Y = fabs(Kal_Pitch) > TRIGGER_THRESHOLD && fabs(lpf_angularVelocity_Pitch) > TRIGGER_THRESHOLD;
+    bool trigger_Z = fabs(Kal_Yaw) > TRIGGER_THRESHOLD && fabs(lpf_angularVelocity_Yaw) > TRIGGER_THRESHOLD;
+
+    if (trigger_X + trigger_Y + trigger_Z >= 2) {
         Serial.println("Deployed!");
         Parachute_ejection();
     }
 
-    prev_KalX = KalX;
-    prev_KalY = KalY;
-    
+    prev_Kal_Roll = Kal_Roll;
+    prev_Kal_Pitch = Kal_Pitch;
+    prev_Kal_Yaw = Kal_Yaw;
 
-    // 시리얼 플로터 전용 출력 (4개 값: 원시X, 칼만X, 원시Y, 칼만Y)
-    Serial.print(accel_angleX); Serial.print(",");
-    Serial.print(KalX); Serial.print(",");
-    Serial.print(accel_angleY); Serial.print(",");
-    Serial.print(KalY); Serial.print(",");
-    Serial.print(angularVelocity_X); Serial.print(",");
-    Serial.print(angularVelocity_Y); Serial.print(",");
-    Serial.print(lpf_angularVelocity_X); Serial.print(",");
-    Serial.println(lpf_angularVelocity_Y); //Serial.print(",");
-    // 50Hz 주기 유지 (20ms)
+    Serial.print(Roll); Serial.print(",");
+    Serial.print(Kal_Roll); Serial.print(",");
+    Serial.print(Pitch); Serial.print(",");
+    Serial.print(Kal_Pitch); Serial.print(",");
+    Serial.print(Yaw); Serial.print(",");
+    Serial.print(Kal_Yaw); Serial.println(",");
+    //Serial.println(angularVelocity_Roll); Serial.print(",");
+    //Serial.println(lpf_angularVelocity_Roll);
+
     while (millis() - currentTime < 20);
 }
