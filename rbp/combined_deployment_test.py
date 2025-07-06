@@ -59,8 +59,8 @@ prev_lpf_gyro_pitch = 0.0
 prev_lpf_gyro_yaw = 0.0
 
 # Deployment thresholds
-threshold_roll_angle = 22.0
-threshold_pitch_angle = 18.0
+threshold_roll_angle = 35.0
+threshold_pitch_angle = 30.0
 threshold_roll_rate = 200.0
 threshold_pitch_rate = 250.0
 trigger_hold_time = 0.1
@@ -124,7 +124,7 @@ def stable_calibration(mpu, duration=3):
 def deploy_parachute():
     """Deploy parachute by triggering GPIO pin"""
     global ejection_flag
-    if not ejection_flag:
+    if not ejection_flag: 
         print(">>Parachute Deployed!")
         GPIO.output(17, GPIO.HIGH)
         time.sleep(0.2)
@@ -192,8 +192,7 @@ try:
         # Check falling condition
         if falling_velocity <= -falling_velocity_threshold:
             falling_count += 1
-        else:
-            falling_count = 0  # Reset counter if not falling
+       
         
         # Read MPU6050 data
         accel = mpu.get_accel_data()
@@ -240,7 +239,7 @@ try:
         # Condition 1: Orientation-based (tumbling)
         angle_cond = abs(lpf_roll_angle) > threshold_roll_angle or abs(lpf_pitch_angle) > threshold_pitch_angle
         rate_cond = abs(lpf_gyro_roll) > threshold_roll_rate or abs(lpf_gyro_pitch) > threshold_pitch_rate
-        orientation_trigger = angle_cond and rate_cond
+        orientation_trigger = angle_cond or rate_cond
         
         # Condition 2: Altitude-based (falling)
         altitude_trigger = falling_count >= falling_threshold
@@ -260,9 +259,10 @@ try:
               f"Alt: {lpf_cali_altitude:.2f}m | "
               f"Fall_V: {falling_velocity:.2f}m/s | "
               f"Fall_Count: {falling_count} | "
-              f"Roll: {lpf_roll_angle:.1f}° | "
-              f"Pitch: {lpf_pitch_angle:.1f}° | "
-              f"Deployed: {ejection_flag}")
+              f"Roll: {lpf_roll_angle:.1f}Â° | "
+              f"Pitch: {lpf_pitch_angle:.1f}Â° | "
+              f"Deployed: {ejection_flag} | "
+              )
         
         # Write combined data
         with open("combined_sensor_data.txt", 'a') as f:
@@ -304,7 +304,7 @@ try:
         prev_p_error = p_error
         prev_lpf_cali_altitude = lpf_cali_altitude
         
-        time.sleep(0.02)
+        time.sleep(0.005)
 
 except KeyboardInterrupt:
     print("Program terminated by user")
