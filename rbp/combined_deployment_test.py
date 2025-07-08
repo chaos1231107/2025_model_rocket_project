@@ -103,6 +103,7 @@ def stable_calibration(mpu, duration=3):
     start = time.time()
     roll_list, pitch_list, yaw_list = [], [], []
     while time.time() - start < duration:
+        GPIO.output(17, GPIO.LOW)
         accel = mpu.get_accel_data()
         gyro = mpu.get_gyro_data()
 
@@ -125,8 +126,8 @@ def deploy_parachute():
     """Deploy parachute by triggering GPIO pin"""
     global ejection_flag
     if not ejection_flag: 
-        print(">>Parachute Deployed!")
         GPIO.output(17, GPIO.HIGH)
+        print(">>Parachute Deployed")
         time.sleep(0.2)
         GPIO.output(17, GPIO.LOW)
         ejection_flag = True
@@ -259,8 +260,9 @@ try:
               f"Alt: {lpf_cali_altitude:.2f}m | "
               f"Fall_V: {falling_velocity:.2f}m/s | "
               f"Fall_Count: {falling_count} | "
-              f"Roll: {lpf_roll_angle:.1f}Â° | "
-              f"Pitch: {lpf_pitch_angle:.1f}Â° | "
+              f"Roll: {lpf_roll_angle:.1f}deg | "
+              f"Pitch: {lpf_pitch_angle:.1f}deg | "
+              f"Yaw : {lpf_yaw_angle :.1f}deg | "
               f"Deployed: {ejection_flag} | "
               )
         
@@ -304,7 +306,7 @@ try:
         prev_p_error = p_error
         prev_lpf_cali_altitude = lpf_cali_altitude
         
-        time.sleep(0.005)
+        time.sleep(0.002)
 
 except KeyboardInterrupt:
     print("Program terminated by user")
