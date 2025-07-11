@@ -21,7 +21,7 @@
 ### Step 0 : sudo raspi-config -> login shell : NO, Serial enable : Yes 
 ### Step 1 : sudo nano /boot/firmware/config.txt
 ### Step 2 : sudo nano /boot/firmware/config.txt
-#### Access bash file 
+### Access bash file and edit 
 **enable_uart=1**
 **dtverlay=disable-bt**
 **dtverlay=uart0, txd0_pin=14, rxd0_pin=15**
