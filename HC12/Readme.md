@@ -1,11 +1,18 @@
 ## Circuit configuration for Raspberry Pi and Arduino communication test
 
-### Raspbery pi - HC12 RF Module
+### HC12 RF Module - Raspberry Pi
 
 #### 5V - VCC
 #### GND - GND
 #### RXD - GPIO 14(TXD)
 #### TXD - GPIO 15(RXD)
+
+### HC12 RF Module - Arduino
+
+#### 5V - VCC
+#### GND - GND
+#### RXD - D3
+#### TXD - D2
 
 
 
