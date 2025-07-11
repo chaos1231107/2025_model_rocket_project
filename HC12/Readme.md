@@ -32,7 +32,7 @@
 ### Step 4 : Reboot
 - **sudo reboot**
 ### Get UART PORT 
-- **ls -l /dev/serial* -> /dev/serial0 -> tty/AMA0 : Adress of UART PIN(Root)
+- **ls -l /dev/serial* -> /dev/serial0 -> tty/AMA0 : Adress of UART PIN(UART needs root authorization to be executed)
 <img width="1003" height="154" alt="image" src="https://github.com/user-attachments/assets/1bd71b40-2864-48f7-bef3-03352aaaeffb" />
 
 
