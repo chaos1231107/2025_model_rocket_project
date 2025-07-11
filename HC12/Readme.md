@@ -5,7 +5,7 @@
 #### 5V - VCC
 #### GND - GND
 #### RXD - GPIO 14(TXD)
-#### TXD - GPIO 15(RXD)
+#### TXD - GPIO 15(RXD), Require 4kohm Register connected in series, Prevent overcurrent at TXD PIN to RBP
 
 ### HC12 RF Module - Arduino
 
