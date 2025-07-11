@@ -29,6 +29,8 @@
 - **sudo systemctl disable --now serial-getty@ttyAMA0.service**
 ### Step 4 : Reboot
 - **sudo reboot**
+### Get UART PORT 
+- **ls -l /dev/serial* -> /dev/serial0 -> tty/AMA0 : Adress of UART PIN(Root)
 
 <img width="342" height="82" alt="image" src="https://github.com/user-attachments/assets/e00a954b-5bde-46c0-93d6-b4680745553d" />
 
