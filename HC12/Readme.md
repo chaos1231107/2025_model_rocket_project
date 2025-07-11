@@ -31,6 +31,8 @@
 - **sudo reboot**
 ### Get UART PORT 
 - **ls -l /dev/serial* -> /dev/serial0 -> tty/AMA0 : Adress of UART PIN(Root)
+<img width="1003" height="154" alt="image" src="https://github.com/user-attachments/assets/1bd71b40-2864-48f7-bef3-03352aaaeffb" />
+
 
 <img width="342" height="82" alt="image" src="https://github.com/user-attachments/assets/e00a954b-5bde-46c0-93d6-b4680745553d" />
 
