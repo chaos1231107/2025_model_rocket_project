@@ -22,9 +22,9 @@
 ### Step 1 : sudo nano /boot/firmware/config.txt
 ### Step 2 : sudo nano /boot/firmware/config.txt
 ### Access bash file and edit 
-**enable_uart=1**
-**dtverlay=disable-bt**
-**dtverlay=uart0, txd0_pin=14, rxd0_pin=15**
+- **enable_uart=1**
+- **dtverlay=disable-bt**
+- **dtverlay=uart0, txd0_pin=14, rxd0_pin=15**
 
 <img width="342" height="82" alt="image" src="https://github.com/user-attachments/assets/e00a954b-5bde-46c0-93d6-b4680745553d" />
 
