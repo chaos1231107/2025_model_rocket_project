@@ -16,7 +16,7 @@
 
 
 
-## RF Signal-Based Communication with RBP(TX) vs Arduino(RX)
+## RF Signal-Based Communication with RBP(TX) and Arduino(RX)
 
 https://github.com/user-attachments/assets/bb00b3bc-3c95-4126-8bbb-460e6d47139b
 
