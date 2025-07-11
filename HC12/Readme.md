@@ -25,6 +25,8 @@
 - **enable_uart=1**
 - **dtverlay=disable-bt**
 - **dtverlay=uart0, txd0_pin=14, rxd0_pin=15**
+<img width="1731" height="715" alt="image" src="https://github.com/user-attachments/assets/868f29bc-7ea1-4f30-bca8-6801c9fe0208" />
+
 ### Step 3 : Deactivate serial-getty service
 - **sudo systemctl disable --now serial-getty@ttyAMA0.service**
 ### Step 4 : Reboot
