@@ -23,6 +23,7 @@ print('Start pi Arduino Echo Test')
 start_time = time.time()
 last_time = time.time()
 while True:
+    echo = ''
     now = time.time()
     dt = now - last_time
     elapsed = now - start_time
