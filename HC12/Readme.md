@@ -46,3 +46,7 @@ https://github.com/user-attachments/assets/bb00b3bc-3c95-4126-8bbb-460e6d47139b
 
 https://www.instructables.com/Radio-Telemetry-for-a-Model-Rocket/
 
+## RF Acuuracy Log at 19200bps
+
+<img width="2177" height="932" alt="image" src="https://github.com/user-attachments/assets/29d3e074-7075-4820-a1cf-25b3039e4294" />
+
