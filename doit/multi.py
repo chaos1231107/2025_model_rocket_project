@@ -93,7 +93,7 @@ def sensor_process(roll, pitch, yaw, ejection_flag):
 
         # BMP 고도 처리
         cali_altitude = bmp280.altitude - init_alt
-        if cali_altitude < 0.01:
+        if cali_altitude < 0.00:
             cali_altitude = 0.01
 
         p_error += kalman_Q
