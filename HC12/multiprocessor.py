@@ -29,7 +29,7 @@ def sensor_process(ejection_flag):
         accel = mpu.get_accel_data()
         gyro = mpu.get_gyro_data()
         roll = math.atan2(accel['y'], accel['z']) * 180 / math.pi
-        pitch = math.atan2(-accel['x'], math.sqrt(accel['y']**2 + accel['z']**2))
+        pitch = math.atan2(-accel['x'], math.sqrt(accel['y']**2 + accel['z']**2)) * 180 / math.pi
         yaw = gyro['z']
         altitude = bmp280.altitude - init_alt
 
