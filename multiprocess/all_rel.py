@@ -9,6 +9,10 @@ import adafruit_bmp280
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(17, GPIO.OUT)
 GPIO.output(17, GPIO.LOW)
+#relay_state = False
+
+#if relay_state:
+    #realay_state = not relay_state
 
 # file path
 for fname in ['gyro.txt', 'comm_data.txt', 'alt.txt']:
@@ -16,7 +20,7 @@ for fname in ['gyro.txt', 'comm_data.txt', 'alt.txt']:
         with open(fname, 'w') as f:
             pass
 # Timer
-start_time = time.time()
+#start_time = time.time()
 
 # Deploy parachute if not already deployed
 def deploy_parachute(ejection_flag):
@@ -55,6 +59,7 @@ def stable_calibration(mpu, duration=3):
 # Communication process
 def comm_process(roll, pitch, yaw, altitude, ejection_flag, lock):
     ser = serial.Serial('/dev/ttyS0', 19200, timeout=0.15)
+    start_time = time.time()
     while True:
         now = time.time()
         elapsed = now - start_time
@@ -77,6 +82,8 @@ def comm_process(roll, pitch, yaw, altitude, ejection_flag, lock):
 
 # Sensor process: read sensors, filter, check conditions
 def sensor_process(roll, pitch, yaw, altitude, ejection_flag, lock):
+    #now = time.time()
+    #elapsed = now - start_time
     i2c = busio.I2C(board.SCL, board.SDA)
     bmp280 = adafruit_bmp280.Adafruit_BMP280_I2C(i2c, address=0x76)
     bmp280.sea_level_pressure = 1013.25
@@ -86,7 +93,7 @@ def sensor_process(roll, pitch, yaw, altitude, ejection_flag, lock):
 
     # Initial calibration for relative angles (like second code)
     init_roll, init_pitch, yaw_bias = stable_calibration(mpu)
-    print(f"Initial calibration: Roll={init_roll:.2f}°, Pitch={init_pitch:.2f}°, Yaw_bias={yaw_bias:.2f}")
+    print(f"Initial calibration: Roll={init_roll:.2f} ,Pitch={init_pitch:.2f}°, Yaw_bias={yaw_bias:.2f}")
 
     # Kalman filter setup for angles
     kalman_angle = {'x': 0.0, 'y': 0.0, 'z': 0.0}
@@ -151,10 +158,13 @@ def sensor_process(roll, pitch, yaw, altitude, ejection_flag, lock):
     last_time = time.time()
     last_debug_time = time.time()
 
+    # Timer
+    start_time = time.time()
     while not ejection_flag.value:
         now = time.time()
         dt = now - last_time
         last_time = now
+        elapsed = now - start_time
 
         # Low pass filter alpha (same as second code)
         fc = 24.22
@@ -229,7 +239,7 @@ def sensor_process(roll, pitch, yaw, altitude, ejection_flag, lock):
 
         # Trigger parachute if needed - relative angle based
         if abs(lpf_roll) > 35.0 or abs(lpf_pitch) > 30.0:
-            print(f">> Angle trigger: Roll={lpf_roll:.1f}°, Pitch={lpf_pitch:.1f}°")
+            print(f">> Angle trigger: Roll={lpf_roll:.1f}, Pitch={lpf_pitch:.1f}")
             deploy_parachute(ejection_flag)
 
         if falling_count >= falling_threshold:
@@ -243,7 +253,19 @@ def sensor_process(roll, pitch, yaw, altitude, ejection_flag, lock):
         prev_kalman_estimate = kalman_estimate
         prev_p_error = p_error
         prev_lpf_cali_altitude = lpf_cali_altitude
-        time.sleep(0.02)
+
+        # file
+        with open('gyro.txt', 'a') as f2:
+            f2.write(
+                f'Elapsed : {elapsed:.1f}, Roll : {roll.value:.1f}, Pitch : {pitch.value:.1f}, Yaw : {yaw.value:.1f}\n'
+                )
+
+        with open('alt.txt', 'a') as f3:
+            f3.write(
+                f'Elapsed : {elapsed:.1f}, Alt : {altitude.value:.1f}\n'
+                )
+
+        time.sleep(0.05)
 
 # Run processes
 if __name__ == "__main__":
