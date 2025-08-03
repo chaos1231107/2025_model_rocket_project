@@ -138,6 +138,7 @@ def sensor_process(roll, pitch, yaw, altitude, ejection_flag, lock, log_queue):
     prev_lpf_cali_altitude = 0.0
     falling_count = 0
     falling_threshold = 3
+    #Testing Value
     deploy_alt = 0.7
     fall_speed_limit = 0.4
     angle_yaw = 0.0
